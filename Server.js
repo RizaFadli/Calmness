@@ -9,6 +9,11 @@ const VERIFY_TOKEN = 'aBc123XyZ456';
 // Middleware untuk mengurai JSON dari body request
 app.use(bodyParser.json());
 
+// Endpoint root untuk pengujian
+app.get('/', (req, res) => {
+    res.send('Server is running!');
+});
+
 // Endpoint untuk verifikasi webhook dari Facebook
 app.get('/webhook', (req, res) => {
     let mode = req.query['hub.mode'];
