@@ -9,7 +9,7 @@ app.use(express.json());
 // -----------------------------------
 // 1. Route untuk GitHub Webhook
 // -----------------------------------
-app.post('/github-webhook', (req, res) => {
+app.post('/webhook', (req, res) => {
   const payload = req.body;
   console.log('Received GitHub Webhook:', payload);
 
@@ -22,7 +22,7 @@ app.post('/github-webhook', (req, res) => {
 // -----------------------------------
 
 // Verifikasi webhook Facebook
-app.get('/facebook-webhook', (req, res) => {
+app.get('/webhook', (req, res) => {
   const VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN;
 
   const mode = req.query['hub.mode'];
