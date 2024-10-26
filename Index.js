@@ -7,21 +7,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // -----------------------------------
-// 1. Route untuk GitHub Webhook
-// -----------------------------------
-app.post('/webhook', (req, res) => {
-  const payload = req.body;
-  console.log('Received GitHub Webhook:', payload);
-
-  // Tambahkan logika Anda di sini untuk menangani event dari GitHub
-  res.status(200).send('GitHub Webhook received');
-});
-
-// -----------------------------------
-// 2. Route untuk Verifikasi dan Webhook Facebook
+// 1. Route Utama untuk Webhook (GitHub & Facebook)
 // -----------------------------------
 
-// Verifikasi webhook Facebook
+// Verifikasi webhook Facebook (GET /webhook)
 app.get('/webhook', (req, res) => {
   const VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN;
 
@@ -31,20 +20,28 @@ app.get('/webhook', (req, res) => {
 
   if (mode && token) {
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('Webhook Verified');
+      console.log('Facebook Webhook Verified');
       res.status(200).send(challenge);
     } else {
       res.sendStatus(403);
     }
+  } else {
+    res.sendStatus(400);
   }
 });
 
-// Menerima pesan dari Facebook
-app.post('/facebook-webhook', async (req, res) => {
-  const body = req.body;
+// Menerima event dari GitHub atau Facebook (POST /webhook)
+app.post('/webhook', async (req, res) => {
+  const userAgent = req.headers['user-agent'];
 
-  if (body.object === 'page') {
-    body.entry.forEach(async (entry) => {
+  if (userAgent.includes('GitHub-Hookshot')) {
+    // Ini adalah event dari GitHub
+    console.log('Received GitHub Webhook:', req.body);
+    // Tambahkan logika untuk memproses event dari GitHub
+    res.status(200).send('GitHub Webhook received');
+  } else if (req.body.object === 'page') {
+    // Ini adalah event dari Facebook
+    req.body.entry.forEach(async (entry) => {
       const message = entry.messaging[0].message.text;
       const senderId = entry.messaging[0].sender.id;
 
@@ -61,7 +58,7 @@ app.post('/facebook-webhook', async (req, res) => {
 });
 
 // -----------------------------------
-// 3. Fungsi untuk Memanggil OpenAI ChatGPT API
+// 2. Fungsi untuk Memanggil OpenAI ChatGPT API
 // -----------------------------------
 
 async function getChatGPTResponse(prompt) {
@@ -84,7 +81,7 @@ async function getChatGPTResponse(prompt) {
 }
 
 // -----------------------------------
-// 4. Fungsi untuk Mengirim Pesan ke Facebook Messenger
+// 3. Fungsi untuk Mengirim Pesan ke Facebook Messenger
 // -----------------------------------
 
 async function sendMessageToFacebook(recipientId, text) {
